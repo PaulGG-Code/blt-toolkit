@@ -40,7 +40,9 @@ display_help() {
     echo "  --all           Install all tools without prompting."
     echo "  --default       Run the default installation."
     echo "  -i [TOOL]       Install specific tools. Multiple tools can be specified."
-    echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat, hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli, chainbridge, near-cli, polkadot-js, polygon-cli, sandbox"
+    echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat "
+    echo "                                   hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli"
+    echo "                                   chainbridge, near-cli, polkadot-js, polygon-cli, sandbox, solana-cli"
     exit 1
 }
 
@@ -512,6 +514,20 @@ install_sandbox() {
     fi
 }
 
+install_solana-cli() {
+    local dir_path=$1
+    if prompt_user "Do you want to install Solana-cli?"; then
+        print_green "Installing Solana-cli..."
+        cd $dir_path
+        wget https://github.com/solana-labs/solana/releases/download/v1.14.27/solana-release-x86_64-unknown-linux-gnu.tar.bz2
+        tar -xvf solana-release-x86_64-unknown-linux-gnu.tar.bz2
+        cd solana-release/bin
+        export PATH=$PWD:$PATH
+        solana --version
+
+    fi
+}
+
 
 main() {
     echo "Starting installation process..." > $LOGFILE
@@ -601,6 +617,9 @@ main() {
     fi
     if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " sandbox " ]]; then
         install_sandbox "/home/kali/tools/Protocol-Tools/sandbox"
+    fi
+    if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " solana-cli " ]]; then
+        install_solana-cli "/home/kali/tools/Protocol-Tools/solana-cli"
     fi
 }
 
