@@ -42,7 +42,7 @@ display_help() {
     echo "  -i [TOOL]       Install specific tools. Multiple tools can be specified."
     echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat "
     echo "                                   hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli"
-    echo "                                   chainbridge, near-cli, polkadot-js, polygon-cli, sandbox, solana-cli"
+    echo "                                   chainbridge, near-cli, polkadot-js, polygon-cli, sandbox, solana-cli, substrate-front-end, substrate-node"
     exit 1
 }
 
@@ -120,6 +120,7 @@ install_python_with_pyenv() {
         pyenv global $version
     fi
 }
+
 
 install_manticore() {
     local dir_path=$1
@@ -528,6 +529,37 @@ install_solana-cli() {
     fi
 }
 
+install_substrate-front-end() {
+    local dir_path=$1
+    if prompt_user "Do you want to install Substrate Front-End template?"; then
+        print_green "Installing Substrate Front-End template..."
+        cd $dir_path
+        #git clone https://github.com/substrate-developer-hub/substrate-front-end-template.git
+        rm yarn.lock
+        yarn install
+    fi
+}
+
+install_substrate-node() {
+    local dir_path=$1
+    if prompt_user "Do you want to install Substrate Node template?"; then
+        print_green "Installing Substrate Node template..."
+        cd $dir_path
+        sudo apt-get install -y golang-go git clang curl libssl-dev llvm libudev-dev make protobuf-compiler
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        source $HOME/.cargo/env
+        rustc --version
+        rustup default stable
+        rustup update
+        rustup update nightly
+        rustup target add wasm32-unknown-unknown --toolchain nightly
+        rustup show
+        rustup +nightly show
+        print_green "Building Substrate Node ..."
+        cargo build --release
+        ./target/release/node-template -h
+    fi
+}
 
 main() {
     echo "Starting installation process..." > $LOGFILE
@@ -620,6 +652,12 @@ main() {
     fi
     if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " solana-cli " ]]; then
         install_solana-cli "/home/kali/tools/Protocol-Tools/solana-cli"
+    fi
+    if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " substrate-front-end " ]]; then
+        install_substrate-front-end "/home/kali/tools/Protocol-Tools/substrate-front-end-template"
+    fi
+    if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " substrate-node " ]]; then
+        install_substrate-node "/home/kali/tools/Protocol-Tools/substrate-node-template"
     fi
 }
 
