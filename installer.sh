@@ -40,7 +40,7 @@ display_help() {
     echo "  --all           Install all tools without prompting."
     echo "  --default       Run the default installation."
     echo "  -i [TOOL]       Install specific tools. Multiple tools can be specified."
-    echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat, hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli, chainbridge, near-cli, polkadot-js, polygon-cli, "
+    echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat, hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli, chainbridge, near-cli, polkadot-js, polygon-cli, sandbox"
     exit 1
 }
 
@@ -379,6 +379,7 @@ install_docker() {
     sudo groupadd docker
     sudo usermod -aG docker ${USER}
     docker --help
+    sudo apt-get install -y docker-compose
 }
 
 
@@ -501,6 +502,16 @@ install_polygon-cli() {
 }
 
 
+install_sandbox() {
+    local dir_path=$1
+    if prompt_user "Do you want to install Sandbox (Algorand)?"; then
+        print_green "Installing Sandbox (Algorand)..."
+        cd $dir_path
+        sudo ./sandbox up
+        sudo ./sandbox down
+    fi
+}
+
 
 main() {
     echo "Starting installation process..." > $LOGFILE
@@ -587,6 +598,9 @@ main() {
     fi
     if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " polygon-cli " ]]; then
         install_polygon-cli "/home/kali/tools/Protocol-Tools/polygon-cli"
+    fi
+    if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " sandbox " ]]; then
+        install_sandbox "/home/kali/tools/Protocol-Tools/sandbox"
     fi
 }
 
