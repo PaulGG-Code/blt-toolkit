@@ -42,7 +42,7 @@ display_help() {
     echo "  -i [TOOL]       Install specific tools. Multiple tools can be specified."
     echo "                  Available tools: manticore, mythril, slither, solgraph, echidna, brownie, certora-cli, foundry, ganache-cli, geth, hardhat "
     echo "                                   hevm, scribble, truffle, errcheck, go-geiger, golangci-lint, gosec, staticcheck, nancy, unconvert, anchorcli"
-    echo "                                   chainbridge, near-cli, polkadot-js, polygon-cli, sandbox, solana-cli, substrate-front-end, substrate-node"
+    echo "                                   chainbridge, near-cli, polkadot-js, polygon-cli, sandbox, solana-cli, substrate-front-end, substrate-node, cargo-deny"
     exit 1
 }
 
@@ -182,6 +182,32 @@ install_nvm_and_node() {
     nvm install 16.18.1
     nvm use 16.18.1
     npm install --global yarn
+}
+
+## Either install rustc w/ rustup or rsvm
+
+# install_rsvm() {
+#     print_green "Installing Rust Version Manager ==> RSVM..."
+#     wget -qO- https://raw.github.com/paulgg-code/rsvm/master/install.sh | bash
+#     source ~/.rsvm/rsvm.sh
+#     print_green "Installing Rust V1.70.0"
+#     rsvm install 1.70.0
+#     rsmv use 1.70.0
+#     rustc -V
+# }
+
+
+install_rust-rustup() {
+    print_green "Installing dependencies Rustup, Rustc, cargo..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source $HOME/.cargo/env
+    rustc --version
+    rustup default stable
+    rustup update
+    rustup update nightly
+    rustup target add wasm32-unknown-unknown --toolchain nightly
+    rustup show
+    rustup +nightly show
 }
 
 install_solgraph() {
@@ -445,15 +471,6 @@ install_chainbridge() {
         sudo apt-get update
         sudo apt-get install -y golang-go git clang curl libssl-dev llvm libudev-dev make protobuf-compiler
         print_green "Installing dependencies Rustup, Substrate..."
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        source $HOME/.cargo/env
-        rustc --version
-        rustup default stable
-        rustup update
-        rustup update nightly
-        rustup target add wasm32-unknown-unknown --toolchain nightly
-        rustup show
-        rustup +nightly show
         print_green "Building Chainbridge ..."
         make build
         sudo mv build/chainbridge /usr/bin/chainbridge
@@ -546,20 +563,22 @@ install_substrate-node() {
         print_green "Installing Substrate Node template..."
         cd $dir_path
         sudo apt-get install -y golang-go git clang curl libssl-dev llvm libudev-dev make protobuf-compiler
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        source $HOME/.cargo/env
-        rustc --version
-        rustup default stable
-        rustup update
-        rustup update nightly
-        rustup target add wasm32-unknown-unknown --toolchain nightly
-        rustup show
-        rustup +nightly show
+        print_green "Installing dependencies Rustup, Substrate..."
         print_green "Building Substrate Node ..."
         cargo build --release
         ./target/release/node-template -h
     fi
 }
+
+install_cargo-deny() {
+    local dir_path=$1
+    if prompt_user "Do you want to install Cargo Deny?"; then
+        print_green "Installing Cargo Deny..."
+        cd $dir_path
+        cargo install --locked cargo-deny && cargo deny check
+    fi
+}
+
 
 main() {
     echo "Starting installation process..." > $LOGFILE
@@ -567,6 +586,9 @@ main() {
     install_pyenv
     install_python_with_pyenv "3.8.18"
     install_nvm_and_node
+    # either use install_rsvm or install_rust-rustup
+    # install_rsvm
+    install_rust-rustup
     install_docker
 
     if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " manticore " ]]; then
@@ -658,6 +680,9 @@ main() {
     fi
     if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " substrate-node " ]]; then
         install_substrate-node "/home/kali/tools/Protocol-Tools/substrate-node-template"
+    fi
+    if [[ $INSTALL_ALL == true ]] || [[ -z $INSTALL_SPECIFIC ]] || [[ " ${INSTALL_SPECIFIC[@]} " =~ " cargo-deny " ]]; then
+        install_cargo-deny "/home/kali/tools/Rust-Automated-tools/cargo-deny"
     fi
 }
 
